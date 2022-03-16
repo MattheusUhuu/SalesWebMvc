@@ -19,7 +19,6 @@ namespace SalesWebMvc.Models
             Name = name;
         }
 
-
         public void AddSeller(Seller seller)
         {
             Sellers.Add(seller);

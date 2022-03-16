@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SalesWebMvc.Services
 {
-    public class SalesRecordService 
+    public class SalesRecordService
     {
         private readonly SalesWebMvcContext _context;
 
@@ -17,7 +17,7 @@ namespace SalesWebMvc.Services
             _context = context;
         }
 
-        public async Task<List<SalesRecord>> FindByDateAsync(DateTime? minDate, DateTime? maxDate) 
+        public async Task<List<SalesRecord>> FindByDateAsync(DateTime? minDate, DateTime? maxDate)
         {
             var result = from obj in _context.SalesRecord select obj;
             if (minDate.HasValue)
@@ -26,7 +26,7 @@ namespace SalesWebMvc.Services
             }
             if (maxDate.HasValue)
             {
-                result = result.Where(x => x.Date >= maxDate.Value);
+                result = result.Where(x => x.Date <= maxDate.Value);
             }
 
             return await result
@@ -34,6 +34,29 @@ namespace SalesWebMvc.Services
                 .Include(x => x.Seller.Department)
                 .OrderByDescending(x => x.Date)
                 .ToListAsync();
+        }
+
+        public async Task<List<IGrouping<Department, SalesRecord>>> FindByDateGroupingAsync(DateTime? minDate, DateTime? maxDate)
+        {
+            var salesRecords = from obj in _context.SalesRecord select obj;
+            if (minDate.HasValue)
+            {
+                salesRecords = salesRecords.Where(x => x.Date >= minDate.Value);
+            }
+            if (maxDate.HasValue)
+            {
+                salesRecords = salesRecords.Where(x => x.Date <= maxDate.Value);
+            }
+
+            var result = await salesRecords
+                .Include(x => x.Seller)
+                .Include(x => x.Seller.Department)
+                .OrderByDescending(x => x.Date)
+                .ToListAsync();
+
+            return result
+                .GroupBy(x => x.Seller.Department)
+                .ToList();
         }
     }
 }
